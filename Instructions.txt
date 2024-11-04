@@ -1,0 +1,3 @@
+I deleted the MainUI and CPU file as they are not going to be used.
+Cpu methods and attributes are used in Machine so machine will be a class that handles all of machine and cpu functions.
+MainUI is merged with main.cpp so the class is not needed.
