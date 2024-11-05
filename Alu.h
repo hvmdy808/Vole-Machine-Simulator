@@ -5,20 +5,14 @@
 #include <string>
 #include <cmath>
 #include <algorithm>
+#include "Register.h"
+#include "Memory.h"
+#include "CU.h"
 #include <bitset>
 using namespace std;
 class ALU{
 public:
-
-//    void load1(int reg_i, int mem_i, Register& rege, Memory& memo){
-//        rege.setcell(reg_i,memo.getcell(mem_i));
-//    }
-//    void load2(int reg_i, string val, Register& rege){
-//        rege.setcell(reg_i, val);
-//    }
-
     void Rotate(int R , int X , Register& reg){
-    //int save =X;
     int dec = hexToDec(reg.getcell(R));
         bitset<8> bin = dec;
         string s = bin.to_string();
@@ -26,9 +20,7 @@ public:
         while(X--){
             rotate(s.begin(), s.end() - 1, s.end());
         }
-//        for(int i=0; i<save; i++){
-//            s[i]='0';
-//        }
+
         dec = stoi(s, nullptr,2);
 
         reg.setcell(R, decToHex(dec));
@@ -129,6 +121,24 @@ public:
         return binV;
     }
 
+    int bin_twos_ToDec(string binValue){
+        int decValue=0;
+        int sign;
+        int base=1;
+        for(int i=binValue.size()-1; i>=0; i--){
+            if(binValue[i]=='1'){
+                if(i==0){
+                    sign=-1;
+                }else{
+                    sign=1;
+                }
+                decValue+=sign*(int(binValue[i]-'0'))*base;
+            }
+            base=base*2;
+        }
+        return decValue;
+    }
+
     int binToDec(string binValue){
         int decValue=0;
         int base=1;
@@ -169,7 +179,6 @@ public:
         }else{
             unsigned_float="0."+mantissa;
         }
-        //cout<<unsigned_float<<endl;
         int iop;
         for(int i=0; i<unsigned_float.length(); i++){
             if(unsigned_float[i]=='.'){
@@ -178,7 +187,6 @@ public:
             }
         }
         int int_part= binToDec(unsigned_float.substr(0,iop));
-        //cout<<int_part<<endl;
         long double flo=int_part;
         int e=-1;
         for(int i=iop+1; i<unsigned_float.length(); i++){
@@ -221,11 +229,8 @@ public:
         n= abs(n);
         string float_bin_val;
         float_bin_val+= decToBin(int(n));
-        //cout<<"unsigned float"<<n<<' '<<"int part of it: "<<int(n)<<' '<<"dec of int part: "<<decToBin(int(n))<<endl;
         float_bin_val+='.';
-        //cout<<"float bin val: "<<float_bin_val<<endl;
         double float_part= n - int(n);
-        //cout<<"float dec part: "<<float_part<<endl;
         while(float_part!=0){
             float_part*=2;
             if(float_part>=1){
@@ -238,7 +243,6 @@ public:
         if(float_bin_val[0]=='.'){
             float_bin_val='0'+float_bin_val;
         }
-        //cout<<"float bin: "<<float_bin_val<<endl;
         int iop, ioms1;
         for(int i=0; i<float_bin_val.length(); i++){
             if(float_bin_val[i]=='.'){
@@ -252,7 +256,6 @@ public:
                 break;
             }
         }
-        //cout<<"index of point: "<<iop<<' '<<"index of most si 1: "<<ioms1<<endl;
         string mantissa="";             //0123456       //01234
         int exp_of_2;                   //0.00101       //101.1
         if(iop>ioms1){
@@ -261,17 +264,14 @@ public:
             exp_of_2=-(ioms1-1-iop);
         }
         int exp_w_bias=4+exp_of_2;
-        //cout<<"power of 2: "<<exp_of_2<<' '<<"pow+bias: "<<exp_w_bias<<endl;
         for(int i=ioms1; i<float_bin_val.length(); i++){
             if(float_bin_val[i]=='1'||float_bin_val[i]=='0'){
-                //cout<<i<<endl;
                 mantissa+=float_bin_val[i];
             }
         }
         while(mantissa.length()<4){
             mantissa+='0';
         }
-        //cout<<"mantissa is: "<<mantissa<<endl;
         string expo= decToBin(exp_w_bias);
         string expo2;
         for(int i=0; i<3-expo.length(); i++){
@@ -283,4 +283,3 @@ public:
     }
 };
 #endif
-
