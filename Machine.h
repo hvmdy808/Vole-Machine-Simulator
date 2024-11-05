@@ -12,22 +12,21 @@
 #include "CU.h"
 using namespace std;
 
-bool fileloaded = true;
 
 
-class Machine : public Memory, public Register, public ALU, public CU{
+class Machine : public ALU, public CU{
     Memory m;
     Register r;
-    ALU a;
-    CU c;
+
 public:
     void load_file(string fn) {
-        ifstream x(fn);
-        if (!x.is_open()) {
+        ifstream x;
+        x.open(fn);
+        while (!x.is_open()) {
             cout << "Failed to open the file" << endl;
-            cout << "Program terminated" << endl;
-            fileloaded = false;
-            exit(0); // Exit the function if file can't be opened
+            cout << "Input a valid name: " << endl;
+            cin>>fn;
+            x.open(fn);
         }
         string line;
         int i = 0;
@@ -62,68 +61,65 @@ public:
     void execute_command(string line) {
         if (line[0] == '1') {
             string s(1, line[1]);
-            //r.setcell(a.hexToDec(s), m.getcell(a.hexToDec(line.substr(2, 2))));
-            c.load1(a.hexToDec(s) , a.hexToDec(line.substr(2,2)) , r,m);
+            load1(hexToDec(s) , hexToDec(line.substr(2,2)) , r,m);
         }
         if (line[0] == '2') {
             string s(1, line[1]);
-            //r.setcell(a.hexToDec(s), line.substr(2, 2));
-            c.load2(a.hexToDec(s) , line.substr(2,2) , r);
+            load2(hexToDec(s) , line.substr(2,2) , r);
         }
         if (line[0] == '3' && !(line[2] == '0' && line[3] == '0')) {
             string s(1, line[1]);
-            //m.setcell(a.hexToDec(line.substr(2, 2)), r.getcell(a.hexToDec(s)));
-            c.store(a.hexToDec(s) , a.hexToDec(line.substr(2,2)) , r,m);
+            store(hexToDec(s) , hexToDec(line.substr(2,2)) , r,m);
         }
         if (line[0] == '3' && line[2] == '0' && line[3] == '0') {
             string s(1, line[1]);
-            c.store(a.hexToDec(s) , a.hexToDec(line.substr(2,2)) , r,m);
-            cout << "Number printed to screen by the simulator : " << r.getcell(a.hexToDec(s)) << endl;
+            store(hexToDec(s) , hexToDec(line.substr(2,2)) , r,m);
+            cout << "Number printed to screen by the simulator : " << r.getcell(hexToDec(s)) << endl;
         }
         if (line[0] == '4') {
             string s(1, line[2]);
             string s2(1, line[3]);
-            r.setcell(a.hexToDec(s2), r.getcell(a.hexToDec(s)));
+            r.setcell(hexToDec(s2), r.getcell(hexToDec(s)));
         }
         if (line[0] == '5') {
             string s(1,line[1]);
             string s1(1,line[2]);
             string s2(1,line[3]);
-            r.setcell(a.hexToDec(s),a.add(r.getcell(a.hexToDec(s1)),r.getcell(a.hexToDec(s2))));
+            r.setcell(hexToDec(s),add(r.getcell(hexToDec(s1)),r.getcell(hexToDec(s2))));
         }
         if(line[0]=='6'){
             string re(1, line[1]);
             string s(1, line[2]);
             string t(1, line[3]);
-            int dec1=a.hexToDec(r.getcell(a.hexToDec(s)));
-            int dec2=a.hexToDec(r.getcell(a.hexToDec(t)));
-            string bin8b_1 = a.decToBin_8bits(dec1);
-            string bin8b_2 = a.decToBin_8bits(dec2);
-            string bin_added = a.floatAdd(bin8b_1, bin8b_2);
-            string hex_val = a.decToHex(a.binToDec(bin_added));
-            r.setcell(a.hexToDec(re), hex_val);
+            int dec1=hexToDec(r.getcell(hexToDec(s)));
+            int dec2=hexToDec(r.getcell(hexToDec(t)));
+            string bin8b_1 = decToBin_8bits(dec1);
+            string bin8b_2 = decToBin_8bits(dec2);
+            string bin_added = floatAdd(bin8b_1, bin8b_2);
+            string hex_val = decToHex(binToDec(bin_added));
+            r.setcell(hexToDec(re), hex_val);
         }
         if(line[0]=='7'){
             string R(1,line[1]);
             string s(1, line[2]);
             string t(1, line[3]);
-            a.OR(a.hexToDec(s), a.hexToDec(t), a.hexToDec(R), r);
+            OR(hexToDec(s), hexToDec(t), hexToDec(R), r);
         }
         if(line[0]=='8'){
             string R(1,line[1]);
             string s(1, line[2]);
             string t(1, line[3]);
-            a.AND(a.hexToDec(s), a.hexToDec(t), a.hexToDec(R), r);
+            AND(hexToDec(s), hexToDec(t), hexToDec(R), r);
         }
         if(line[0]=='9'){
             string R(1,line[1]);
             string s(1, line[2]);
             string t(1, line[3]);
-            a.XOR(a.hexToDec(s), a.hexToDec(t), a.hexToDec(R), r);
+            XOR(hexToDec(s), hexToDec(t), hexToDec(R), r);
         }
         if(line[0]=='A'){
             string s(1, line[1]);
-            a.Rotate(a.hexToDec(s), line[3]-'0', r);
+            Rotate(hexToDec(s), line[3]-'0', r);
         }
 
     }
@@ -137,21 +133,22 @@ public:
                 break;
             }
             if (code[0] == 'C') {
+                cout<<"PC= "<<decToHex(PC)<<endl;
                 break;
             }
-            if (code[0] == 'B') {
+            else if (code[0] == 'B') {
                 string s(1, code[1]);
-                if (a.hexToDec(r.getcell(a.hexToDec(s))) == a.hexToDec(r.getcell(0))) {
-                    PC = a.hexToDec(code.substr(2, 2));
+                if (hexToDec(r.getcell(hexToDec(s))) == hexToDec(r.getcell(0))) {
+                    PC = hexToDec(code.substr(2, 2));
                 } else {
                     PC += 2;
                     continue;
                 }
             }
-            if(code[0]=='D'){
+            else if(code[0]=='D'){
                 string s(1, code[1]);
-                if (a.hexToDec(r.getcell(a.hexToDec(s))) > a.hexToDec(r.getcell(0))) {
-                    PC = a.hexToDec(code.substr(2, 2));
+                if (bin_twos_ToDec(decToBin_8bits(hexToDec(r.getcell(hexToDec(s))))) > bin_twos_ToDec(decToBin_8bits(hexToDec(r.getcell(0))))) {
+                    PC = hexToDec(code.substr(2, 2));
                 } else {
                     PC += 2;
                     continue;
@@ -182,7 +179,7 @@ public:
             if (i == 0) {
                 cout << "00" << " - " << r.getcell(i) << endl;
             } else if (i <= 15) {
-                cout << a.decToHex(i) << " - " << r.getcell(i) << endl;
+                cout << decToHex(i) << " - " << r.getcell(i) << endl;
             }
         }
     }
